@@ -1,0 +1,31 @@
+hash: a89d01a7466ea58f6fa65231986881a9eb773550a1f591272d415b7cb54b5142
+updated: 2017-06-01T16:54:47.612952816-07:00
+imports:
+- name: github.com/go-validator/validator
+  version: 07ffaad256c8e957050ad83d6472eb97d785013d
+- name: github.com/go-yaml/yaml
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/spf13/pflag
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/google/gofuzz
+  version: 44d81051d367757e1c7c6a5a86423ece9afcf63c
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
+  - require
+- name: go.uber.org/tools
+  version: ce2550dad7144b81ae2f67dc5e55597643f6902b
+  subpackages:
+  - update-license

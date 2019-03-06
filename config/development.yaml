@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+kitchen:
+  minimize_decay: true
+  topology:
+    - name: "overflow"
+      capacity: 100
+      decay_rate: 2
+      supported: 
+        - hot
+        - cold
+        - froxen
+    - name: "hot_plate"
+      capacity: 20
+      decay_rate: 1
+      supported: 
+        - hot
+    - name: "cold"
+      capacity: 20
+      decay_rate: 0.5
+      supported: 
+        - cold
+    - name: "freezer"
+      capacity: 20
+      decay_rate: 0.1
+      supported: 
+        - frozen
+    - name: "best"
+      capacity: 1
+      decay_rate: 0 # no decay
+      supported: 
+        - hot
+        - cold
+        - frozen
