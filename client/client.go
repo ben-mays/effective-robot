@@ -22,7 +22,7 @@ type Client struct {
 	Transport *http.Client
 }
 
-// LoadConfig returns a valid Client instacne using the default http.Client.
+// LoadConfig returns a valid Client instance using the default http.Client.
 func LoadConfig(provider config.Provider) (*Client, error) {
 	var cfg ClientConfig
 	provider.Get("client").Populate(&cfg)
@@ -65,7 +65,7 @@ func (c Client) CreateOrder(req server.CreateOrderRequest) (*server.CreateOrderR
 
 func (c *Client) GetOrder(orderID string) (*server.OrderResponse, error) {
 	var order server.OrderResponse
-	uri := c.BaseURL.String() + fmt.Sprintf("/order/%s", orderID)
+	uri := fmt.Sprintf("%s/order/%s", c.BaseURL.String(), orderID)
 	resp, err := c.Transport.Get(uri)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (c *Client) GetOrder(orderID string) (*server.OrderResponse, error) {
 
 func (c *Client) ListOrders() (*server.ListOrdersResponse, error) {
 	var orders server.ListOrdersResponse
-	uri := c.BaseURL.String() + fmt.Sprintf("/order")
+	uri := fmt.Sprintf("%s/order", c.BaseURL.String())
 	resp, err := c.Transport.Get(uri)
 	if err != nil {
 		return nil, err
@@ -100,13 +100,13 @@ func (c *Client) UpdateOrder(orderID string, req server.UpdateOrderRequest) (*se
 	if err != nil {
 		return nil, err
 	}
-	uri := c.BaseURL.String() + fmt.Sprintf("/order/%s", orderID)
+	uri := fmt.Sprintf("%s/order/%s", c.BaseURL.String(), orderID)
 	resp, err := c.Transport.Post(uri, "application/json", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return nil, errors.New("Update order failed")
+		return nil, errors.New("update order failed")
 	}
 	err = json.NewDecoder(resp.Body).Decode(&order)
 	if err != nil {

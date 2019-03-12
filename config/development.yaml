@@ -10,7 +10,7 @@ kitchen:
       supported: 
         - hot
         - cold
-        - froxen
+        - frozen
     - name: "hot_plate"
       capacity: 20
       decay_rate: 1
