@@ -70,6 +70,8 @@ Internally, these 3 entity relationships are modeled as the following:
 * A Shelf has many Orders
 * A Order has 1 Shelf  (redundant, but an optimization for calc decay)
 
+![](https://user-images.githubusercontent.com/9100476/54185192-a1e47380-4465-11e9-8b27-811c8c50dd2c.png)
+
 Initially I started with a simpler model but found that calculating an Order's decay required knowing the decay of the existing shelf, while also holding a lock for the Order. I wanted to keep the _row_ level lock on each Order entity and not complicate the Kitchen further, so opted to added a reference on the Order to it's current shelf. Another approach I explored was storing a history table for all shelf movement, and then using that to calculate the decay for any order at a given time. This was _cool_ but overly-complicated and removed.
 
 The Kitchen should be a singleton, as it runs a background process that continuously tries to optimize the order placement. The optimization algorithm is dead simple:
