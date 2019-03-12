@@ -22,7 +22,7 @@ Additionally, `runner` contains the code for executing the challenge.
 
 You can configure the server, and client, by modifying configuration files under `config/`. The configuration file loaded is determined by the enviornment variable `SERVICE_ENV`. If no environment is set, the default is `development` (e.g. the default is `config/development.yaml`). 
 
-Additionally, the Kitchen topology is configurable. An example configuratiom:
+An example configuratiom:
 
 ```yaml
 # config/development.yaml
