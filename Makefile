@@ -11,8 +11,8 @@ test:
 	go test ${PWD}/kitchen
 
 build:
-	go build -o bins/effective-robot main.go
-	go build -o bins/runner runner/runner.go
+	go build -o bin/effective-robot main.go
+	go build -o bin/runner runner/runner.go
 
 pkg:
 	docker build -t ${SERVICE}:${VERSION} .

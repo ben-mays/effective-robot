@@ -5,4 +5,4 @@ COPY . .
 
 RUN make build
 
-CMD ["bins/effective-robot"]
+CMD ["bin/effective-robot"]
