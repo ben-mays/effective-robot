@@ -23,7 +23,7 @@ challenge:
 	@docker rm effective-robot-server &> /dev/null || true
 
 	@docker run -d --name effective-robot-server ${SERVICE}:${VERSION} &> /dev/null
-	@docker run --rm -it --network container:effective-robot-server ${SERVICE}:${VERSION} bin/runner http://127.0.0.1:8080
+	@docker run --rm -it --network container:effective-robot-server ${SERVICE}:${VERSION} bin/runner -f resources/Engineering_Challenge_-_Orders.json http://127.0.0.1:8080 30 3.5
 	
 	@docker kill effective-robot-server &> /dev/null || true
 	@docker rm effective-robot-server &> /dev/null || true

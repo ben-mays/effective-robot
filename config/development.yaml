@@ -5,31 +5,24 @@ kitchen:
   minimize_decay: true
   topology:
     - name: "overflow"
-      capacity: 100
+      capacity: 20
       decay_rate: 2
       supported: 
         - hot
         - cold
         - frozen
-    - name: "hot_plate"
-      capacity: 20
+    - name: "hot"
+      capacity: 15
       decay_rate: 1
       supported: 
         - hot
-    - name: "cold"
-      capacity: 20
-      decay_rate: 0.5
+    - name: "fridge"
+      capacity: 15
+      decay_rate: 1
       supported: 
         - cold
     - name: "freezer"
-      capacity: 20
-      decay_rate: 0.1
+      capacity: 15
+      decay_rate: 1
       supported: 
-        - frozen
-    - name: "best"
-      capacity: 1
-      decay_rate: 0 # no decay
-      supported: 
-        - hot
-        - cold
         - frozen

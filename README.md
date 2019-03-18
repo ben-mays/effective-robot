@@ -18,7 +18,20 @@ There are 3 exported packages:
 * The API server: `github.com/ben-mays/effective-robot/server`
 * The kitchen service: `github.com/ben-mays/effective-robot/kitchen`
 
-Additionally, `runner` contains the code for executing the challenge.
+Additionally, `runner` contains the code for executing the challenge:
+
+```bash
+15:38 $ ./bin/runner help
+usage: ./runner (options) [hostname] [duration] [orders per second]
+options:
+        -f       A path to a json file containing order definitions.
+```
+
+An example run might look like:
+
+```bash
+./bin/runner -f ~/Downloads/Engineering_Challenge_-_Orders.json http://127.0.0.1:8080 60 3.5
+```
 
 You can configure the server, and client, by modifying configuration files under `config/`. The configuration file loaded is determined by the enviornment variable `SERVICE_ENV`. If no environment is set, the default is `development` (e.g. the default is `config/development.yaml`). 
 
