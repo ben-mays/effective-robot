@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -9,6 +11,7 @@ import (
 	"os/exec"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ben-mays/effective-robot/client"
@@ -47,14 +50,9 @@ func makeOrder() (string, string, float64, float64) {
 	return food.name, food.temp, food.shelflife, food.decay
 }
 
-func simulateOrder(kitchen *client.Client) *server.OrderResponse {
-	name, temp, shelf, decay := makeOrder()
-	resp, err := kitchen.CreateOrder(server.CreateOrderRequest{
-		Name:      name,
-		Temp:      temp,
-		ShelfLife: shelf,
-		DecayRate: decay,
-	})
+// Optionally, can be given an order to use instead of generating one. If an order is not given, one is generated.
+func simulateOrder(kitchen *client.Client, orderRequest *server.CreateOrderRequest) *server.OrderResponse {
+	resp, err := kitchen.CreateOrder(*orderRequest)
 	if err != nil {
 		return nil
 	}
@@ -130,7 +128,7 @@ func displayStatus(kitchen *client.Client, done chan bool) {
 				continue
 			}
 			clear()
-			fmt.Printf(color("blue", "%8s\t%8s\t%8s\t%s\t%8s\n"), "Name", "State", "Age", "Value", "Shelf")
+			fmt.Printf(color("blue", "%30s\t%8s\t%8s\t%s\t%8s\n"), "Name", "State", "Age", "Value", "Shelf")
 			sort.Slice(resp.Orders, func(i, j int) bool {
 				if resp.Orders[i].NormalValue == resp.Orders[j].NormalValue {
 					// sort by age if equal
@@ -149,7 +147,7 @@ func displayStatus(kitchen *client.Client, done chan bool) {
 					valueString = color("yellow", valueString)
 				}
 
-				fmt.Printf("%8s\t%8s\t%8.2fs\t%s\t%8s\n", o.Name, o.State, o.Age, valueString, o.Shelf)
+				fmt.Printf("%30s\t%8s\t%8.2fs\t%s\t%8s\n", o.Name, o.State, o.Age, valueString, o.Shelf)
 			}
 			fmt.Println()
 			spin(count)
@@ -159,27 +157,47 @@ func displayStatus(kitchen *client.Client, done chan bool) {
 	}
 }
 
-func run(kitchen *client.Client, numSeconds int, rate float64) {
-
+func run(kitchen *client.Client, numSeconds int, rate float64, staticOrders []server.CreateOrderRequest) {
 	// metrics captures each orders' metrics
 	metrics := make(chan *server.OrderResponse)
 	// done signals that all orders are processed
 	done := make(chan bool)
 
-	// launch a background routine to continuously display the kitchen
-	// status
+	// launch a background routine to continuously display the kitchen status
 	go displayStatus(kitchen, done)
 
-	// generate $rate orders, per second, in the main thread
+	// generate _rate_ orders, per second, in the main thread. we use a poisson distribution to determine how
+	// many orders to create per second.
 	orderCount := 0
 	dist := distuv.Poisson{Lambda: rate}
 	for i := 0; i < numSeconds; i++ {
 		orders := int(dist.Rand())
 		orderCount += orders
+
 		for j := 0; j < orders; j++ {
-			go func() {
-				metrics <- simulateOrder(kitchen)
-			}()
+			var createOrderReq *server.CreateOrderRequest
+			// if no static orders given, generate them randomly
+			if len(staticOrders) == 0 {
+				name, temp, shelf, decay := makeOrder()
+				createOrderReq = &server.CreateOrderRequest{
+					Name:      name,
+					Temp:      temp,
+					ShelfLife: shelf,
+					DecayRate: decay,
+				}
+			} else if orderCount+j < len(staticOrders) {
+				createOrderReq = &staticOrders[orderCount+j]
+			}
+			// no-op if nil. this is useful if the client wants to watch the display but stop creating
+			// orders after the file cursor is at eof.
+			if createOrderReq != nil {
+				go func(req *server.CreateOrderRequest) {
+					metrics <- simulateOrder(kitchen, req)
+				}(createOrderReq)
+			} else {
+				// avoid blocking on no-op orders
+				orderCount--
+			}
 		}
 		time.Sleep(time.Second)
 	}
@@ -230,30 +248,52 @@ func run(kitchen *client.Client, numSeconds int, rate float64) {
 		counts["trashed"])
 }
 
+type orderList []server.CreateOrderRequest
+
 func main() {
 
 	// set defaults
 	host := "http://localhost:8080"
 	numSeconds := 60
 	rate := 3.5
+	var orders orderList
+	// used to shift pos args when options are given
+	shift := 0
 
 	// parse pos args
 	if len(os.Args) > 1 {
-		if os.Args[1] == "help" {
-			fmt.Println("usage: ./runner [server host] [time to run] [lambda]")
+		if strings.Contains(os.Args[1], "help") {
+			fmt.Println("usage: ./runner (options) [hostname] [duration] [orders per second]\noptions:\n\t-f\t A path to a json file containing order definitions.")
 			os.Exit(0)
 		}
-		host = os.Args[1]
-		if len(os.Args) > 2 {
-			seconds, err := strconv.ParseInt(os.Args[2], 10, 64)
+		// handle -f option, shift by 1
+		if strings.Contains("-f", os.Args[1]) {
+			shift += 2
+			bytes, err := ioutil.ReadFile(os.Args[2])
 			if err != nil {
+				fmt.Printf("invalid file path given: %s", err.Error())
+				os.Exit(1)
+			}
+			err = json.Unmarshal(bytes, &orders)
+			if err != nil {
+				fmt.Printf("error reading order file: %s\n", err.Error())
+				os.Exit(1)
+			}
+			fmt.Printf("using orders from %s", os.Args[2])
+		}
+		host = os.Args[shift+1]
+		if len(os.Args) > 2 {
+			seconds, err := strconv.ParseInt(os.Args[shift+2], 10, 64)
+			if err != nil {
+				fmt.Printf("invalid duration given: %s", err.Error())
 				os.Exit(1)
 			}
 			numSeconds = int(seconds)
 		}
 		if len(os.Args) > 3 {
-			lambda, err := strconv.ParseFloat(os.Args[3], 64)
+			lambda, err := strconv.ParseFloat(os.Args[shift+3], 64)
 			if err != nil {
+				fmt.Printf("invalid rate given: %s", err.Error())
 				os.Exit(1)
 			}
 			rate = lambda
@@ -262,7 +302,8 @@ func main() {
 
 	url, err := url.Parse(host)
 	if err != nil {
-		panic(err)
+		fmt.Printf("invalid server hostname: %s\n", err.Error())
+		os.Exit(1)
 	}
 	kitchen := &client.Client{
 		BaseURL:   url,
@@ -270,8 +311,9 @@ func main() {
 	}
 
 	if !kitchen.Healthy() {
-		panic(fmt.Sprintf("cannot reach server: %s", url.String()))
+		fmt.Printf("cannot reach server: %s\n", url.String())
+		os.Exit(1)
 	}
 
-	run(kitchen, numSeconds, rate)
+	run(kitchen, numSeconds, rate, orders)
 }
