@@ -23,7 +23,7 @@ challenge:
 	@docker rm effective-robot-server &> /dev/null || true
 
 	@docker run -d --name effective-robot-server ${SERVICE}:${VERSION} &> /dev/null
-	@docker run --rm -it --network container:effective-robot-server ${SERVICE}:${VERSION} bins/runner http://127.0.0.1:8080
+	@docker run --rm -it --network container:effective-robot-server ${SERVICE}:${VERSION} bin/runner http://127.0.0.1:8080
 	
 	@docker kill effective-robot-server &> /dev/null || true
 	@docker rm effective-robot-server &> /dev/null || true
