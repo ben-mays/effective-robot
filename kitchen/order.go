@@ -21,17 +21,6 @@ const (
 	Trashed  OrderState = "trashed"
 )
 
-type OrderEvent struct {
-	OrderID  string
-	OldState OrderState
-	NewState OrderState
-}
-
-type OrderRecord struct {
-	PlacedAt time.Time
-	Shelf    Shelf
-}
-
 // Order is the basic primitive representing a incoming order from a customer.
 type Order struct {
 	sync.RWMutex
