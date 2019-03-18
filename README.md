@@ -30,7 +30,7 @@ options:
 An example run might look like:
 
 ```bash
-./bin/runner -f ~/Downloads/Engineering_Challenge_-_Orders.json http://127.0.0.1:8080 60 3.5
+./bin/runner -f resources/Engineering_Challenge_-_Orders.json http://127.0.0.1:8080 60 3.5
 ```
 
 You can configure the server, and client, by modifying configuration files under `config/`. The configuration file loaded is determined by the enviornment variable `SERVICE_ENV`. If no environment is set, the default is `development` (e.g. the default is `config/development.yaml`). 
